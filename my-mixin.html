@@ -1,0 +1,34 @@
+<script>const MyMixin = supperclass => class extends supperclass {
+  static get properties() {
+    return {
+      selected: {
+        type: Object,
+        observer: '_selectedChanged'
+      }
+    };
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    this.shadowRoot.addEventListener('slotchange', this._resetSeletected.bind(this));
+
+    this._resetSeletected();
+  }
+
+  _resetSeletected() {
+    if (!this.selected || this.selected.parentElement !== this) {
+      this.selected = this.firstElementChild;
+    }
+  }
+
+  _selectedChanged(selected, oldselected) {
+    if (oldselected) {
+      oldselected.removeAttribute('selected');
+    }
+
+    if (selected) {
+      selected.setAttribute('selected', '');
+    }
+  }
+
+};</script>

@@ -1,0 +1,191 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+--><!-- Load the Polymer.Element base class --><link rel="import" href="bower_components/polymer/polymer-element.html">
+<link rel="import" href="my-mixin.html">
+<dom-module id="my-carousel">
+  <template>
+
+    <!-- Styles MUST be inside template -->
+    <style>
+
+      :host {
+        display: block;
+      }
+
+      div > ::slotted(:not([selected])) {
+        display: none;
+      }
+
+      button {
+        position: absolute;
+        top: calc(50% - 20px);
+        padding: 0;
+        line-height: 40px;
+        border: none;
+        background: none;
+        color: #DDD;
+        font-size: 40px;
+        font-weight: bold;
+        opacity: 0.7;
+      }
+
+      button:hover,
+      button:focus {
+        opacity: 1;
+      }
+
+      #prevBtn {
+        left: 12px;
+      }
+
+      #nextBtn {
+        right: 12px;
+      }
+
+      button[disabled] {
+        opacity: 0.4;
+      }
+    </style>
+
+    <div>
+      <slot></slot>
+    </div>
+    <button id="prevBtn" on-click="previous">❮</button>
+    <button id="nextBtn" on-click="next">❯</button>
+  </template>
+
+  <script>// Extend Polymer.Element base class
+class MyCarousel extends MyMixin(Polymer.Element) {
+  static get is() {
+    return 'my-carousel';
+  }
+
+  _selectedChanged(selected, oldselected) {
+    super._selectedChanged(selected, oldselected);
+
+    if (selected) {
+      this.$.prevBtn.disabled = !selected.previousElementSibling;
+      this.$.nextBtn.disabled = !selected.nextElementSibling;
+
+      this._loadImage(selected);
+
+      this._loadImage(selected.previousElementSibling);
+
+      this._loadImage(selected.nextElementSibling);
+    } else {
+      this.$.prevBtn.disabled = true;
+      this.$.nextBtn.disabled = true;
+    }
+  }
+
+  _loadImage(img) {
+    if (img && !img.src) {
+      img.src = img.getAttribute('data-src');
+    }
+  }
+
+  _translateX(elem, x, transition) {
+    elem.style.display = 'block';
+    elem.style.transition = transition ? 'transform 0.2s' : '';
+    elem.style.transform = 'translate3d(' + x + 'px, 0, 0)';
+  }
+
+  ready() {
+    super.ready();
+    requestAnimationFrame(this._installListeners.bind(this));
+  }
+
+  _installListeners() {
+    this.addEventListener('transitionend', this._resetChildrenStyles.bind(this));
+  }
+
+  _resetChildrenStyles() {
+    let elem = this.firstElementChild;
+
+    while (elem) {
+      elem.style.display = '';
+      elem.style.transition = '';
+      elem.style.transform = '';
+      elem = elem.nextElementSibling;
+    }
+  }
+
+  _touchstart(event) {
+    // No transition if less than two images
+    if (this.childElementCount < 2) {
+      return;
+    }
+  }
+
+  _touchmove(event) {
+    // No transition if less than two images
+    if (this.childElementCount < 2) {
+      return;
+    }
+  }
+
+  _touchend(event) {
+    // No transition if less than two images
+    if (this.childElementCount < 2) {
+      return;
+    }
+  }
+
+  _installListeners() {
+    this.addEventListener('transitionend', this._resetChildrenStyles.bind(this));
+    this.addEventListener('touchstart', this._touchstart.bind(this));
+    this.addEventListener('touchmove', this._touchmove.bind(this));
+    this.addEventListener('touchend', this._touchend.bind(this));
+  }
+
+  previous() {
+    const elem = this.selected && this.selected.previousElementSibling;
+
+    if (elem) {
+      //Setup transition start state
+      const oldselected = this.selected;
+
+      this._translateX(oldselected, 0);
+
+      this._translateX(elem, -this.offsetWidth); // start the transition
+
+
+      this.selected = elem;
+
+      this._translateX(oldselected, this.offsetWidth, true);
+
+      this._translateX(elem, 0, true);
+    }
+  }
+
+  next() {
+    const elem = this.selected && this.selected.nextElementSibling;
+
+    if (elem) {
+      //Setup transition start state
+      const oldselected = this.selected;
+
+      this._translateX(oldselected, 0);
+
+      this._translateX(elem, this.offsetWidth); // start the transition
+
+
+      this.selected = elem;
+
+      this._translateX(oldselected, -this.offsetWidth, true);
+
+      this._translateX(elem, 0, true);
+    }
+  }
+
+} // Register custom element definition using standard platform API
+
+
+customElements.define(MyCarousel.is, MyCarousel);</script>
+</dom-module>
